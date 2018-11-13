@@ -1,16 +1,40 @@
 version: '3'
 
 services:
-  server:
+  serverless:
     build: .
-    command: /bin/bash -c 'echo OK'
-    env_file: .env
+    command: ./start-sam.sh
     volumes:
       - .:/usr/src/app
     ports:
-      - "3000:8080"
+      - "3000:3000"
     environment:
-      LANG: en_US.UTF-8
-      LANGUAGE: en_US:en
-      LC_ALL: en_US.UTF-8
-      TZ: Asia/Tokyo
+      - LANG=en_US.UTF-8
+      - LANGUAGE=en_US:en
+      - LC_ALL=en_US.UTF-8
+      - TZ=Asia/Tokyo
+       - VOLUME=$PWD 
+    depends_on:
+      - db
+      - go
+    env_file: .env
+
+  go:
+    command: ./gobuild.sh
+    build:
+      context: ./
+      dockerfile: ./Dockerfile_go
+    volumes:
+      - .:/go/src
+
+  db:
+    environment:
+      - MYSQL_ROOT_PASSWORD=docker
+      - MYSQL_PASSWORD=docker
+      - MYSQL_USER=docker
+      - MYSQL_DATABASE=reportdb
+    build: 
+       context: ./
+       dockerfile: ./Dockerfile_mysql
+    ports:
+      - "3306:3306"
